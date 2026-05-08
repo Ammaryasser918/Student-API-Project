@@ -18,7 +18,12 @@ namespace FirstRESTProject.Controllers
             return Ok(StudentDataSemulation.StudentsList);
         }
 
-        
+        [HttpGet("Passed", Name = "GetPassedStudents")]
+        public ActionResult<IEnumerable<Student>> GetPassedStudents()
+        {
+            var passedStudents = StudentDataSemulation.StudentsList.Where(student => student.Grage >= 50);
+            return Ok(passedStudents);
+        }
 
 
 

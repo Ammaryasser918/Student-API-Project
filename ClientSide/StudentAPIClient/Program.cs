@@ -45,9 +45,29 @@ namespace StudentApiClient
             }
 
         }
-        
 
-        
+
+        static async Task GetPassedStudents()
+        {
+            try
+            {
+                Console.WriteLine("\n_________________________________");
+                Console.WriteLine("Fetching Passed Students..\n");
+                var students = await httpClient.GetFromJsonAsync<List<Student>>("Passed");
+                if (students != null)
+                {
+                    foreach (var std in students)
+                    {
+                        Console.WriteLine($"ID: {std.ID}, Name: {std.Name}, Age: {std.Age}, Grade: {std.Grage}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An Error Occurred : {ex.Message}");
+            }
+        }
+
 
 
     }
