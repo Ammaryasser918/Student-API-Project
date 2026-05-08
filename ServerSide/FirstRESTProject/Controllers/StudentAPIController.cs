@@ -30,11 +30,11 @@ namespace FirstRESTProject.Controllers
         public ActionResult<IEnumerable<Student>> GetPassedStudents()
         {
             if ((StudentDataSemulation.StudentsList.Count == 0) ||
-                (StudentDataSemulation.StudentsList.Where(student => student.Grage >= 50).ToList().Count == 0))
+                (StudentDataSemulation.StudentsList.Where(student => student.Grade >= 50).ToList().Count == 0))
             {
                 return NotFound("No Passed Students Found");
             }
-            var passedStudents = StudentDataSemulation.StudentsList.Where(student => student.Grage >= 50);
+            var passedStudents = StudentDataSemulation.StudentsList.Where(student => student.Grade >= 50);
             return Ok(passedStudents);
         }
 
@@ -48,13 +48,13 @@ namespace FirstRESTProject.Controllers
             {
                 return NotFound("No Students Found.");
             }
-            var averageGrade = StudentDataSemulation.StudentsList.Average(student => student.Grage);
+            var averageGrade = StudentDataSemulation.StudentsList.Average(student => student.Grade);
             return Ok(averageGrade);
         }
 
 
 
-        [HttpGet("StudentID", Name = "GetStudentByID")]
+        [HttpGet("StudentID/{StudentID}", Name = "GetStudentByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -84,7 +84,7 @@ namespace FirstRESTProject.Controllers
             }
             student.ID = StudentDataSemulation.StudentsList.Count > 0 ? StudentDataSemulation.StudentsList.Max(student => student.ID) + 1 : 1;
             StudentDataSemulation.StudentsList.Add(student);
-            return CreatedAtRoute("GetStudentByID", new { id = student.ID }, student);
+            return CreatedAtRoute($"GetStudentByID", new { StudentID = student.ID }, student);
         }
 
 
@@ -108,6 +108,30 @@ namespace FirstRESTProject.Controllers
             return Ok($"Student With ID {StudentID} Has been Deleted Successfully");
 
         }
+
+        [HttpPut("UpdateStudent/{id}", Name = "UpdateStudnet")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<Student> UpdateStudent(int id, Student updatedStudent)
+        {
+            if (id < 1 || updatedStudent == null || string.IsNullOrEmpty(updatedStudent.Name) || updatedStudent.Age < 0 || updatedStudent.Grade < 0)
+            {
+                return BadRequest("Bad Request: Not Accepted ID");
+            }
+            var student = StudentDataSemulation.StudentsList.FirstOrDefault(s => s.ID == id);
+            if (student == null)
+            {
+                return NotFound($"Student With ID {id} Not Found");
+            }
+
+            student.Name = updatedStudent.Name;
+            student.Age = updatedStudent.Age;
+            student.Grade = updatedStudent.Grade;
+            return Ok(student);
+
+        }
+
 
 
     }
