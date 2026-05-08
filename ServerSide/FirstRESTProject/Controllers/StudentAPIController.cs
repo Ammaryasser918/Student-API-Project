@@ -14,15 +14,26 @@ namespace FirstRESTProject.Controllers
 
         [HttpGet("All", Name = "GetAllStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<Student>> GetAllStudents()
         {
+            if (StudentDataSemulation.StudentsList.Count == 0)
+            {
+                return NotFound("No Students Found");
+            }
             return Ok(StudentDataSemulation.StudentsList);
         }
 
         [HttpGet("Passed", Name = "GetPassedStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<Student>> GetPassedStudents()
         {
+            if ((StudentDataSemulation.StudentsList.Count == 0) ||
+                (StudentDataSemulation.StudentsList.Where(student => student.Grage >= 50).ToList().Count == 0))
+            {
+                return NotFound("No Passed Students Found");
+            }
             var passedStudents = StudentDataSemulation.StudentsList.Where(student => student.Grage >= 50);
             return Ok(passedStudents);
         }
@@ -43,7 +54,7 @@ namespace FirstRESTProject.Controllers
 
 
 
-        [HttpGet("StudentID/{StudentID}", Name = "GetStudentByID")]
+        [HttpGet("StudentID", Name = "GetStudentByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -59,6 +70,21 @@ namespace FirstRESTProject.Controllers
                 return NotFound("Student Not Found");
             }
             return Ok(Std);
+        }
+
+
+        [HttpPost("NewStudent", Name = "NewStudent")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<Student> AddNewStudent(Student student)
+        {
+            if (student == null || string.IsNullOrEmpty(student.Name) || student.Age <= 0)
+            {
+                return BadRequest("Invalid Student Data.");
+            }
+            student.ID = StudentDataSemulation.StudentsList.Count > 0 ? StudentDataSemulation.StudentsList.Max(student => student.ID) + 1 : 1;
+            StudentDataSemulation.StudentsList.Add(student);
+            return CreatedAtRoute("GetStudentByID", new { id = student.ID }, student);
         }
 
 

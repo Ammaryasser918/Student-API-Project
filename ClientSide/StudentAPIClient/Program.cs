@@ -24,7 +24,9 @@ namespace StudentApiClient
 
             //await GetAverageGrade();
 
-            await GetStudentByID(1);
+            //await GetStudentByID(1);
+
+            await AddNewStudent(new Student { Name = "Ahmed", Age = 43, Grage = 55, ID = 7 });
 
         }
 
@@ -34,15 +36,24 @@ namespace StudentApiClient
             {
                 Console.WriteLine("\n_________________________________");
                 Console.WriteLine("\nFetching all students...\n");
-                var students = await httpClient.GetFromJsonAsync<List<Student>>("All");
-
-                if (students != null)
+                var response = await httpClient.GetAsync("All");
+                if (response.IsSuccessStatusCode)
                 {
-                    foreach (var std in students)
+                    var students = await response.Content.ReadFromJsonAsync<List<Student>>();
+                    if (students != null && students.Count > 0)
                     {
-                        Console.WriteLine($"ID: {std.ID}, Name: {std.Name}, Age: {std.Age}, Grage: {std.Grage}\n");
+                        foreach (var std in students)
+                        {
+                            Console.WriteLine($"ID: {std.ID}, Name: {std.Name}, Age: {std.Age}, Grage: {std.Grage}\n");
+                        }
                     }
                 }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("No Students Found.");
+                }
+
+                
             }
             catch(Exception ex)
             {
@@ -58,14 +69,23 @@ namespace StudentApiClient
             {
                 Console.WriteLine("\n_________________________________");
                 Console.WriteLine("Fetching Passed Students..\n");
-                var students = await httpClient.GetFromJsonAsync<List<Student>>("Passed");
-                if (students != null)
+                var response = await httpClient.GetAsync("Passed");
+                if (response.IsSuccessStatusCode)
                 {
-                    foreach (var std in students)
+                    var students = await response.Content.ReadFromJsonAsync<List<Student>>();
+                    if (students != null && students.Count > 0)
                     {
-                        Console.WriteLine($"ID: {std.ID}, Name: {std.Name}, Age: {std.Age}, Grade: {std.Grage}");
+                        foreach (var std in students)
+                        {
+                            Console.WriteLine($"ID: {std.ID}, Name: {std.Name}, Age: {std.Age}, Grade: {std.Grage}");
+                        }
                     }
                 }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("No Students Found");
+                }
+                
             }
             catch (Exception ex)
             {
@@ -80,10 +100,18 @@ namespace StudentApiClient
                 Console.WriteLine("\n_________________________________");
                 Console.WriteLine("Calculating Average Grade..\n");
 
-                double? AvgGrade = await httpClient.GetFromJsonAsync<double>("AverageGrade");
-                if ((AvgGrade != null) || (AvgGrade != 0))
+                var response = await httpClient.GetAsync("AverageGrade");
+                if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"The Average is : {AvgGrade}");
+                    double? AvgGrade = await response.Content.ReadFromJsonAsync<double>();
+                    if ((AvgGrade != null) || (AvgGrade != 0))
+                    {
+                        Console.WriteLine($"The Average is : {AvgGrade}");
+                    }
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine("No Sudents Found");
                 }
             }
             catch(Exception ex)
@@ -101,10 +129,22 @@ namespace StudentApiClient
             {
                 Console.WriteLine("\n_________________________________");
                 Console.WriteLine("Fetching Student Data..\n");
-                var student = await httpClient.GetFromJsonAsync<Student>($"StudentID/{StudentID}");
-                if (student != null)
+                var response = await httpClient.GetAsync($"{StudentID}");
+                if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"StudentID : {student.ID}, StudentName : {student.Name}, Age : {student.Age}, Grade : {student.Grage}");
+                    var student = await httpClient.GetFromJsonAsync<Student>($"StudentID/{StudentID}");
+                    if (student != null)
+                    {
+                        Console.WriteLine($"StudentID : {student.ID}, StudentName : {student.Name}, Age : {student.Age}, Grade : {student.Grage}");
+                    }
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine($"Bad Request : Not Accepted ID {StudentID}");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Not Found : Student with ID {StudentID} Not Found");
                 }
             }
             catch(Exception ex)
@@ -113,6 +153,32 @@ namespace StudentApiClient
             }
         }
 
+        static async Task AddNewStudent(Student student)
+        {
+            try
+            {
+                
+                Console.WriteLine("\n_________________________________");
+                Console.WriteLine("Adding The Student..\n");
+                var response = await httpClient.PostAsJsonAsync("NewStudent", student);
+                if (response.IsSuccessStatusCode)
+                {
+                    var AddedStudent = await response.Content.ReadFromJsonAsync<Student>();
+                    if (AddedStudent != null)
+                    {
+                        Console.WriteLine($"Added Student - ID: {AddedStudent.ID}, Name: {AddedStudent.Name}, Age: {AddedStudent.Age}, Grade: {AddedStudent.Grage}");
+                    }
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine($"Bad Request: Invalid Student Data");
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"An Error Occurred: {ex.Message}");
+            }
+        }
 
 
     }
