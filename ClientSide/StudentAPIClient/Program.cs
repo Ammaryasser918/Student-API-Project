@@ -26,7 +26,9 @@ namespace StudentApiClient
 
             //await GetStudentByID(1);
 
-            await AddNewStudent(new Student { Name = "Ahmed", Age = 43, Grage = 55, ID = 7 });
+            //await AddNewStudent(new Student { Name = "Ahmed", Age = 43, Grage = 55, ID = 7 });
+
+            await DeleteStudent(1);
 
         }
 
@@ -172,6 +174,33 @@ namespace StudentApiClient
                 else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                 {
                     Console.WriteLine($"Bad Request: Invalid Student Data");
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"An Error Occurred: {ex.Message}");
+            }
+        }
+
+        static async Task DeleteStudent(int StudentID)
+        {
+            try
+            {
+                Console.WriteLine("\n_________________________________");
+                Console.WriteLine("Deleting The Student..\n");
+                var response = await httpClient.DeleteAsync($"DeleteStudent/{StudentID}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var ans = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Success: {ans}");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine("Bad Request: Invalid ID");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Not Found: Studnet with ID {StudentID} Not Found");
                 }
             }
             catch(Exception ex)

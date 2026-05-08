@@ -88,5 +88,27 @@ namespace FirstRESTProject.Controllers
         }
 
 
+        [HttpDelete("DeleteStudent/{StudentID}", Name = "DeleteStudent")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult DeleteStudent(int StudentID)
+        {
+            if (StudentID < 1)
+            {
+                return BadRequest($"Not Accepted ID {StudentID}");
+            }
+            var student = StudentDataSemulation.StudentsList.FirstOrDefault(student => (student.ID == StudentID));
+            if (student == null)
+            {
+                return NotFound($"Student With ID {StudentID} Not Found");
+            }
+
+            StudentDataSemulation.StudentsList.Remove(student);
+            return Ok($"Student With ID {StudentID} Has been Deleted Successfully");
+
+        }
+
+
     }
 }
