@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using StudentApiClient;
 using StudentAPIClient;
+using System.Diagnostics;
 
 
 namespace StudentApiClient
@@ -21,7 +22,9 @@ namespace StudentApiClient
 
             //await GetPassedStudents();
 
-            await GetAverageGrade();
+            //await GetAverageGrade();
+
+            await GetStudentByID(1);
 
         }
 
@@ -75,10 +78,10 @@ namespace StudentApiClient
             try
             {
                 Console.WriteLine("\n_________________________________");
-                Console.WriteLine("Fetching Passed Students..\n");
+                Console.WriteLine("Calculating Average Grade..\n");
 
-                var AvgGrade = await httpClient.GetFromJsonAsync<double>("AverageGrade");
-                if (AvgGrade != 0)
+                double? AvgGrade = await httpClient.GetFromJsonAsync<double>("AverageGrade");
+                if ((AvgGrade != null) || (AvgGrade != 0))
                 {
                     Console.WriteLine($"The Average is : {AvgGrade}");
                 }
@@ -89,6 +92,25 @@ namespace StudentApiClient
             }
 
 
+        }
+
+
+        static async Task GetStudentByID(int StudentID)
+        {
+            try
+            {
+                Console.WriteLine("\n_________________________________");
+                Console.WriteLine("Fetching Student Data..\n");
+                var student = await httpClient.GetFromJsonAsync<Student>($"StudentID/{StudentID}");
+                if (student != null)
+                {
+                    Console.WriteLine($"StudentID : {student.ID}, StudentName : {student.Name}, Age : {student.Age}, Grade : {student.Grage}");
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"An Error Occurred: {ex.Message}");
+            }
         }
 
 
