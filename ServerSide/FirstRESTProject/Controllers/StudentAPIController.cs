@@ -26,7 +26,16 @@ namespace FirstRESTProject.Controllers
         }
 
 
-
+        [HttpGet("AverageGrade", Name = "GetAverageGrade")]
+        public ActionResult<IEnumerable<double>> GetAverageGrade()
+        {
+            if (StudentDataSemulation.StudentsList.Count == 0)
+            {
+                return NotFound("No Students Found.");
+            }
+            var averageGrade = StudentDataSemulation.StudentsList.Average(student => student.Grage);
+            return Ok(averageGrade);
+        }
 
     }
 }

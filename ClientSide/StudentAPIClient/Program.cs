@@ -17,9 +17,11 @@ namespace StudentApiClient
         static async Task Main(string[] args)
         {
             httpClient.BaseAddress = new Uri("https://localhost:7175/api/Students/");
-            await GetAllStudents();
+            //await GetAllStudents();
 
-            await GetPassedStudents();
+            //await GetPassedStudents();
+
+            await GetAverageGrade();
 
         }
 
@@ -66,6 +68,27 @@ namespace StudentApiClient
             {
                 Console.WriteLine($"An Error Occurred : {ex.Message}");
             }
+        }
+
+        static async Task GetAverageGrade()
+        {
+            try
+            {
+                Console.WriteLine("\n_________________________________");
+                Console.WriteLine("Fetching Passed Students..\n");
+
+                var AvgGrade = await httpClient.GetFromJsonAsync<double>("AverageGrade");
+                if (AvgGrade != 0)
+                {
+                    Console.WriteLine($"The Average is : {AvgGrade}");
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"An Error Occurred: {ex.Message}");
+            }
+
+
         }
 
 
