@@ -179,5 +179,40 @@ namespace FirstRESTProject.Controllers
         }
 
 
+        [HttpGet("GetImage/{fileName}", Name = "GetImage")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetImage(string fileName)
+        {
+            var uploadDirectory = @"D:\VS_projects\API\ServerSide\FirstRESTProject\MyUploads";
+            var filePath = Path.Combine(uploadDirectory, fileName);
+            
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound("Image not found.");
+            }
+
+            var image = System.IO.File.OpenRead(filePath);
+            var mimeType = GetMimeType(filePath);
+
+            return File(image, mimeType);
+
+        }
+
+        // MIME = Multipurpose Internet Mail Extentions type
+        // It's a standard way to indicate the nature and format of a file or content
+        // MIME tell browsers, email clients and other software about the type of data they're handling
+        string GetMimeType(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                _ => "application/octet-stream",
+            };
+        }
+
     }
 }
