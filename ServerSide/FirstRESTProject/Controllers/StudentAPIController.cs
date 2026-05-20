@@ -86,12 +86,12 @@ namespace FirstRESTProject.Controllers
         {
             if (newStudentDTO == null || string.IsNullOrEmpty(newStudentDTO.Name) || newStudentDTO.Age <= 0)
             {
-                return BadRequest("Invalid Student Data."); 
+                return BadRequest("Invalid Student Data.");
             }
             clsStudentBusinessLayer Std = new clsStudentBusinessLayer(new StudentDTO(newStudentDTO.ID, newStudentDTO.Name, newStudentDTO.Age, newStudentDTO.Grade), clsStudentBusinessLayer.enMode.AddNew);
             Std.Save();
             newStudentDTO.ID = Std.ID;
-            
+
             return CreatedAtRoute($"GetStudentByID", new { StudentID = newStudentDTO.ID }, newStudentDTO);
         }
 
@@ -149,6 +149,34 @@ namespace FirstRESTProject.Controllers
 
         }
 
+        [HttpPost("UploadImage", Name = "UploadImage")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> UploadImage(IFormFile imageFile)
+        {
+            if (imageFile == null || imageFile.Length == 0)
+            {
+                return BadRequest("No File Uploaded.");
+            }
+
+            var uploadDictionary = @"D:\VS_projects\API\ServerSide\FirstRESTProject\MyUploads";
+
+            var FileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+            var filePath = Path.Combine(uploadDictionary, FileName);
+
+            if (!Directory.Exists(uploadDictionary))
+            {
+                Directory.CreateDirectory(uploadDictionary);
+            }
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            return Ok(new { filePath });
+
+        }
 
 
     }
