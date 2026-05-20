@@ -10,6 +10,7 @@ using StudentAPIClient;
 using System.Diagnostics;
 
 
+
 namespace StudentApiClient
 {
     class Programm
@@ -18,23 +19,23 @@ namespace StudentApiClient
         static async Task Main(string[] args)
         {
             httpClient.BaseAddress = new Uri("https://localhost:7175/api/Students/");
-            await GetAllStudents();
+            //await GetAllStudents();
 
-            await GetPassedStudents();
+            //await GetPassedStudents();
 
-            await GetAverageGrade();
+            //await GetAverageGrade();
 
             await GetStudentByID(1);
 
-            await AddNewStudent(new Student { Name = "Ahmed", Age = 43, Grade = 55, ID = 7 });
+            //await AddNewStudent(new Student { Name = "Ahmed", Age = 43, Grade = 55, ID = 7 });
 
-            await GetAllStudents();
+            //await GetAllStudents();
 
-            await DeleteStudent(1);
+            //await DeleteStudent(1);
 
-            await GetAllStudents();
+            //await GetAllStudents();
 
-            await UpdateStudent(2, new Student { Name = "Omar", Age = 8, Grade = 75 });
+            //await UpdateStudent(2, new Student { Name = "Omar", Age = 8, Grade = 75 });
 
         }
 

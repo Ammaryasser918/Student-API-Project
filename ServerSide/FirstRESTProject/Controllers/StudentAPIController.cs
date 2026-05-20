@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using FirstRESTProject.Model;
-using FirstRESTProject.DataSemulation;
 using System.Collections.Generic;
+using StudentAPIDataAccessLayer;
+using StudentAPIBusinessLayer;
+
 
 namespace FirstRESTProject.Controllers
 {
+
+
     //[Route("api/[controller]")]
     [Route("api/Students")]
     [ApiController]
@@ -15,26 +18,28 @@ namespace FirstRESTProject.Controllers
         [HttpGet("All", Name = "GetAllStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<IEnumerable<Student>> GetAllStudents()
+        public ActionResult<IEnumerable<StudentDTO>> GetAllStudents()
         {
-            if (StudentDataSemulation.StudentsList.Count == 0)
+            List<StudentDTO> StudentList = clsStudentBusinessLayer.GetAllStduents();
+            if (StudentList.Count == 0)
             {
                 return NotFound("No Students Found");
             }
-            return Ok(StudentDataSemulation.StudentsList);
+            return Ok(StudentList);
         }
 
         [HttpGet("Passed", Name = "GetPassedStudents")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<IEnumerable<Student>> GetPassedStudents()
+        public ActionResult<IEnumerable<StudentDTO>> GetPassedStudents()
         {
-            if ((StudentDataSemulation.StudentsList.Count == 0) ||
-                (StudentDataSemulation.StudentsList.Where(student => student.Grade >= 50).ToList().Count == 0))
+            var StudentList = clsStudentBusinessLayer.GetPassedStudents();
+            if ((StudentList.Count == 0) ||
+                (StudentList.Where(student => student.Grade >= 50).ToList().Count == 0))
             {
                 return NotFound("No Passed Students Found");
             }
-            var passedStudents = StudentDataSemulation.StudentsList.Where(student => student.Grade >= 50);
+            var passedStudents = StudentList.Where(student => student.Grade >= 50);
             return Ok(passedStudents);
         }
 
@@ -44,12 +49,12 @@ namespace FirstRESTProject.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<IEnumerable<double>> GetAverageGrade()
         {
-            if (StudentDataSemulation.StudentsList.Count == 0)
+            double Average = clsStudentBusinessLayer.GetAverageGrade();
+            if (Average == 0)
             {
                 return NotFound("No Students Found.");
             }
-            var averageGrade = StudentDataSemulation.StudentsList.Average(student => student.Grade);
-            return Ok(averageGrade);
+            return Ok(Average);
         }
 
 
@@ -58,33 +63,36 @@ namespace FirstRESTProject.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<Student> GetStudentByID(int StudentID)
+        public ActionResult<StudentDTO> GetStudentByID(int StudentID)
         {
             if (StudentID < 1)
             {
                 return BadRequest($"Not Accepted ID {StudentID}");
             }
-            var Std = StudentDataSemulation.StudentsList.FirstOrDefault(student => (student.ID == StudentID));
+            var Std = clsStudentBusinessLayer.GetStudentByID(StudentID);
             if (Std == null)
             {
                 return NotFound("Student Not Found");
             }
-            return Ok(Std);
+            StudentDTO SDTO = Std.SDTO;
+            return Ok(SDTO);
         }
 
 
         [HttpPost("NewStudent", Name = "NewStudent")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<Student> AddNewStudent(Student student)
+        public ActionResult<StudentDTO> AddNewStudent(StudentDTO newStudentDTO)
         {
-            if (student == null || string.IsNullOrEmpty(student.Name) || student.Age <= 0)
+            if (newStudentDTO == null || string.IsNullOrEmpty(newStudentDTO.Name) || newStudentDTO.Age <= 0)
             {
-                return BadRequest("Invalid Student Data.");
+                return BadRequest("Invalid Student Data."); 
             }
-            student.ID = StudentDataSemulation.StudentsList.Count > 0 ? StudentDataSemulation.StudentsList.Max(student => student.ID) + 1 : 1;
-            StudentDataSemulation.StudentsList.Add(student);
-            return CreatedAtRoute($"GetStudentByID", new { StudentID = student.ID }, student);
+            clsStudentBusinessLayer Std = new clsStudentBusinessLayer(new StudentDTO(newStudentDTO.ID, newStudentDTO.Name, newStudentDTO.Age, newStudentDTO.Grade), clsStudentBusinessLayer.enMode.AddNew);
+            Std.Save();
+            newStudentDTO.ID = Std.ID;
+            
+            return CreatedAtRoute($"GetStudentByID", new { StudentID = newStudentDTO.ID }, newStudentDTO);
         }
 
 
@@ -92,20 +100,27 @@ namespace FirstRESTProject.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult DeleteStudent(int StudentID)
         {
             if (StudentID < 1)
             {
                 return BadRequest($"Not Accepted ID {StudentID}");
             }
-            var student = StudentDataSemulation.StudentsList.FirstOrDefault(student => (student.ID == StudentID));
-            if (student == null)
+            clsStudentBusinessLayer Std = clsStudentBusinessLayer.GetStudentByID(StudentID);
+            if (Std == null)
             {
                 return NotFound($"Student With ID {StudentID} Not Found");
             }
 
-            StudentDataSemulation.StudentsList.Remove(student);
-            return Ok($"Student With ID {StudentID} Has been Deleted Successfully");
+            if (clsStudentBusinessLayer.DeleteStudent(StudentID))
+            {
+                return Ok($"Student With ID {StudentID} Deleted Successfully");
+            }
+            else
+            {
+                return NotFound($"Student with ID {StudentID} not found. no rows deleted!");
+            }
 
         }
 
@@ -113,22 +128,24 @@ namespace FirstRESTProject.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<Student> UpdateStudent(int id, Student updatedStudent)
+        public ActionResult<StudentDTO> UpdateStudent(int id, StudentDTO updatedStudent)
         {
             if (id < 1 || updatedStudent == null || string.IsNullOrEmpty(updatedStudent.Name) || updatedStudent.Age < 0 || updatedStudent.Grade < 0)
             {
                 return BadRequest("Bad Request: Not Accepted ID");
             }
-            var student = StudentDataSemulation.StudentsList.FirstOrDefault(s => s.ID == id);
-            if (student == null)
+
+            var Std = clsStudentBusinessLayer.GetStudentByID(id);
+            if (Std == null)
             {
                 return NotFound($"Student With ID {id} Not Found");
             }
 
-            student.Name = updatedStudent.Name;
-            student.Age = updatedStudent.Age;
-            student.Grade = updatedStudent.Grade;
-            return Ok(student);
+            Std.Name = updatedStudent.Name;
+            Std.Age = updatedStudent.Age;
+            Std.Grade = updatedStudent.Grade;
+            Std.Save();
+            return Ok(Std.SDTO);
 
         }
 
